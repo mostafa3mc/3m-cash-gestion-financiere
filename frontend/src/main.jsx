@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles/app.css';
 
 const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 function App(){
-  const [page, setPage] = useState('Tableau de bord');
-
+const [page, setPage] = React.useState('Tableau de bord');
   const menu = [
     'Tableau de bord',
     'Saisie des données',
