@@ -213,10 +213,69 @@ function Saisie(){
 }
 
 function EtatFinancier(){
-  return <section className="panel">
-    <h2>État financier par agence</h2>
-    <p>Cette page sera connectée après la saisie réelle des données.</p>
-  </section>
+  const [refs, setRefs] = React.useState({agences:[]});
+  const [agenceId, setAgenceId] = React.useState('');
+  const [annee, setAnnee] = React.useState(new Date().getFullYear());
+  const [mois, setMois] = React.useState(new Date().getMonth()+1);
+  const [data, setData] = React.useState(null);
+
+  React.useEffect(() => {
+    fetch(API + '/api/referentiels')
+      .then(r => r.json())
+      .then(setRefs);
+  }, []);
+
+  function charger(){
+    if(!agenceId){
+      alert("Veuillez sélectionner une agence");
+      return;
+    }
+
+    fetch(`${API}/api/dashboard/agence?agence_id=${agenceId}&annee=${annee}&mois=${mois}`)
+      .then(r => r.json())
+      .then(setData)
+      .catch(() => alert("Erreur de chargement"));
+  }
+
+  return <>
+    <section className="panel">
+      <h2>État financier par agence</h2>
+
+      <div style={{display:'grid',gridTemplateColumns:'250px 150px 150px 150px',gap:12}}>
+        <select value={agenceId} onChange={e=>setAgenceId(e.target.value)}>
+          <option value="">Choisir agence</option>
+          {refs.agences.map(a =>
+            <option key={a.id} value={a.id}>{a.nom}</option>
+          )}
+        </select>
+
+        <input
+          type="number"
+          value={annee}
+          onChange={e=>setAnnee(e.target.value)}
+        />
+
+        <select value={mois} onChange={e=>setMois(e.target.value)}>
+          {moisListe.map((m,i)=>
+            <option key={m} value={i+1}>{m}</option>
+          )}
+        </select>
+
+        <button onClick={charger}>
+          Afficher
+        </button>
+      </div>
+    </section>
+
+    {data &&
+      <section className="cards">
+        <Card title="Revenus TTC" value={format(data.revenus_ttc)} />
+        <Card title="Charges TTC" value={format(data.charges_ttc)} />
+        <Card title="Résultat TTC" value={format(data.net_ttc)} accent />
+        <Card title="Résultat HT" value={format(data.net_ht)} />
+      </section>
+    }
+  </>
 }
 
 function EtatGlobal(){
