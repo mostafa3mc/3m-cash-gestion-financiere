@@ -79,7 +79,10 @@ function Saisie(){
   const [mois, setMois] = React.useState(new Date().getMonth() + 1);
   const [revenus, setRevenus] = React.useState({});
   const [charges, setCharges] = React.useState({});
-
+  React.useEffect(() => {
+  setRevenus({});
+  setCharges({});
+  }, [agenceId, annee, mois]);
   React.useEffect(() => {
     fetch(API + '/api/referentiels')
       .then(r => r.json())
@@ -90,7 +93,21 @@ function Saisie(){
   const totalRevenus = Object.values(revenus).reduce((a,b)=>a + Number(b || 0), 0);
   const totalCharges = Object.values(charges).reduce((a,b)=>a + Number(b || 0), 0);
   const resultat = totalRevenus - totalCharges;
+  function handleEnter(e){
+  if(e.key === 'Enter'){
+    e.preventDefault();
 
+    const inputs = Array.from(
+      document.querySelectorAll('input, select, button')
+    );
+
+    const index = inputs.indexOf(e.target);
+
+    if(index >= 0 && inputs[index + 1]){
+      inputs[index + 1].focus();
+    }
+  }
+}
   function save(){
     if(!agenceId){
       alert("Veuillez sélectionner une agence");
@@ -134,7 +151,12 @@ function Saisie(){
         </label>
 
         <label>Année
-          <input type="number" value={annee} onChange={e=>setAnnee(e.target.value)} />
+                <input
+        type="number"
+        value={annee}
+        onChange={e=>setAnnee(e.target.value)}
+        onKeyDown={handleEnter}
+      />
         </label>
 
         <label>Mois
@@ -150,12 +172,13 @@ function Saisie(){
       {refs.produits.map(p =>
         <div key={p.id} style={{display:'grid', gridTemplateColumns:'1fr 200px', gap:12, marginBottom:10}}>
           <span>{p.nom}</span>
-          <input
-            type="number"
-            placeholder="0,00"
-            value={revenus[p.id] || ''}
-            onChange={e=>setRevenus({...revenus, [p.id]:e.target.value})}
-          />
+                <input
+        type="number"
+        placeholder="0,00"
+        value={revenus[p.id] || ''}
+        onChange={e=>setRevenus({...revenus, [p.id]:e.target.value})}
+        onKeyDown={handleEnter}
+      />
         </div>
       )}
     </section>
@@ -165,12 +188,13 @@ function Saisie(){
       {refs.concepts.map(c =>
         <div key={c.id} style={{display:'grid', gridTemplateColumns:'1fr 200px', gap:12, marginBottom:10}}>
           <span>{c.nom}</span>
-          <input
-            type="number"
-            placeholder="0,00"
-            value={charges[c.id] || ''}
-            onChange={e=>setCharges({...charges, [c.id]:e.target.value})}
-          />
+                <input
+        type="number"
+        placeholder="0,00"
+        value={charges[c.id] || ''}
+        onChange={e=>setCharges({...charges, [c.id]:e.target.value})}
+        onKeyDown={handleEnter}
+      />
         </div>
       )}
     </section>
