@@ -220,10 +220,41 @@ function EtatFinancier(){
 }
 
 function EtatGlobal(){
-  return <section className="panel">
-    <h2>État global société</h2>
-    <p>Cette page affichera le total consolidé de toutes les agences.</p>
-  </section>
+  const [annee, setAnnee] = React.useState(new Date().getFullYear());
+  const [mois, setMois] = React.useState(new Date().getMonth() + 1);
+  const [data, setData] = React.useState(null);
+
+  function charger(){
+    fetch(`${API}/api/dashboard/global?annee=${annee}&mois=${mois}`)
+      .then(r => r.json())
+      .then(setData)
+      .catch(() => alert("Erreur de chargement"));
+  }
+
+  React.useEffect(() => {
+    charger();
+  }, []);
+
+  return <>
+    <section className="panel">
+      <h2>État global société</h2>
+
+      <div style={{display:'grid', gridTemplateColumns:'200px 200px 160px', gap:16}}>
+        <input type="number" value={annee} onChange={e=>setAnnee(e.target.value)} />
+        <select value={mois} onChange={e=>setMois(e.target.value)}>
+          {moisListe.map((m,i)=><option key={m} value={i+1}>{m}</option>)}
+        </select>
+        <button onClick={charger}>Afficher</button>
+      </div>
+    </section>
+
+    {data && <section className="cards">
+      <Card title="Revenus TTC" value={format(data.revenus_ttc)} />
+      <Card title="Charges TTC" value={format(data.charges_ttc)} />
+      <Card title="Résultat TTC" value={format(data.net_ttc)} accent />
+      <Card title="Résultat HT" value={format(data.net_ht)} />
+    </section>}
+  </>
 }
 
 function Comparaison(){
