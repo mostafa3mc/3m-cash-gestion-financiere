@@ -333,6 +333,15 @@ function Comparaison(){
 
   const [resultats, setResultats] = React.useState([]);
 
+  const topProgression = resultats
+  .filter(r => r.variation > 0)
+  .slice(0, 5);
+
+const topRegression = [...resultats]
+  .filter(r => r.variation < 0)
+  .sort((a,b) => a.variation_pct - b.variation_pct)
+  .slice(0, 5);
+
   React.useEffect(()=>{
     fetch(API+'/api/referentiels')
       .then(r=>r.json())
@@ -528,7 +537,57 @@ function Comparaison(){
 
         </section>
       }
+{resultats.length > 0 &&
+<section className="panel">
+  <h2>Top progression / régression</h2>
 
+  <div style={{
+    display:'grid',
+    gridTemplateColumns:'1fr 1fr',
+    gap:20
+  }}>
+
+    <div>
+      <h3>Top 5 Progression</h3>
+      <table width="100%">
+        <tbody>
+          {[...resultats]
+            .sort((a,b)=>b.variation-a.variation)
+            
+            .slice(0,5)
+            .map(r=>
+              <tr key={'p'+r.agence_id}>
+                <td>{r.agence}</td>
+                <td>{format(r.variation)}</td>
+              </tr>
+            )
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h3>Top 5 Régression</h3>
+      <table width="100%">
+        <tbody>
+          {[...resultats]
+            .sort((a,b)=>a.variation-b.variation)
+            .slice(0,5)
+            .map(r=>
+              <tr key={'r'+r.agence_id}>
+                <td>{r.agence}</td>
+                <td>{format(r.variation)}</td>
+              </tr>
+            )
+          }
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+}
+      
     </>
   );
 }
