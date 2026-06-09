@@ -317,10 +317,220 @@ function EtatGlobal(){
 }
 
 function Comparaison(){
-  return <section className="panel">
-    <h2>Comparaison</h2>
-    <p>Comparaison entre deux périodes.</p>
-  </section>
+
+  const [refs, setRefs] = React.useState({agences:[]});
+
+  const [anneeA, setAnneeA] = React.useState(new Date().getFullYear());
+  const [moisA, setMoisA] = React.useState(new Date().getMonth());
+
+  const [anneeB, setAnneeB] = React.useState(new Date().getFullYear());
+  const [moisB, setMoisB] = React.useState(new Date().getMonth()+1);
+
+  const [modeAgence, setModeAgence] = React.useState('all');
+
+  const [agenceUnique, setAgenceUnique] = React.useState('');
+  const [agencesSelectionnees, setAgencesSelectionnees] = React.useState([]);
+
+  const [resultats, setResultats] = React.useState([]);
+
+  React.useEffect(()=>{
+    fetch(API+'/api/referentiels')
+      .then(r=>r.json())
+      .then(setRefs);
+  },[]);
+
+  function comparer(){
+
+    let agenceIds = '';
+
+    if(modeAgence === 'one'){
+      agenceIds = agenceUnique;
+    }
+
+    if(modeAgence === 'many'){
+      agenceIds = agencesSelectionnees.join(',');
+    }
+
+    let url =
+      `${API}/api/comparaison?annee_a=${anneeA}&mois_a=${moisA}`+
+      `&annee_b=${anneeB}&mois_b=${moisB}`;
+
+    if(agenceIds){
+      url += `&agence_ids=${agenceIds}`;
+    }
+
+    fetch(url)
+      .then(r=>r.json())
+      .then(setResultats);
+  }
+
+  return (
+    <>
+
+      <section className="panel">
+
+        <h2>Comparaison</h2>
+
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:20}}>
+
+          <div>
+            <h3>Période A</h3>
+
+            <input
+              type="number"
+              value={anneeA}
+              onChange={e=>setAnneeA(e.target.value)}
+            />
+
+            <select
+              value={moisA}
+              onChange={e=>setMoisA(e.target.value)}
+            >
+              {moisListe.map((m,i)=>
+                <option key={i} value={i+1}>{m}</option>
+              )}
+            </select>
+          </div>
+
+          <div>
+            <h3>Période B</h3>
+
+            <input
+              type="number"
+              value={anneeB}
+              onChange={e=>setAnneeB(e.target.value)}
+            />
+
+            <select
+              value={moisB}
+              onChange={e=>setMoisB(e.target.value)}
+            >
+              {moisListe.map((m,i)=>
+                <option key={i} value={i+1}>{m}</option>
+              )}
+            </select>
+          </div>
+
+        </div>
+
+        <hr/>
+
+        <h3>Agences</h3>
+
+        <label>
+          <input
+            type="radio"
+            checked={modeAgence==='all'}
+            onChange={()=>setModeAgence('all')}
+          />
+          Toutes les agences
+        </label>
+
+        <br/>
+
+        <label>
+          <input
+            type="radio"
+            checked={modeAgence==='one'}
+            onChange={()=>setModeAgence('one')}
+          />
+          Une agence
+        </label>
+
+        {modeAgence==='one' &&
+          <select
+            value={agenceUnique}
+            onChange={e=>setAgenceUnique(e.target.value)}
+          >
+            <option value="">---</option>
+            {refs.agences.map(a=>
+              <option key={a.id} value={a.id}>{a.nom}</option>
+            )}
+          </select>
+        }
+
+        <br/>
+
+        <label>
+          <input
+            type="radio"
+            checked={modeAgence==='many'}
+            onChange={()=>setModeAgence('many')}
+          />
+          Plusieurs agences
+        </label>
+
+        {modeAgence==='many' &&
+          <div>
+            {refs.agences.map(a=>
+              <div key={a.id}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={agencesSelectionnees.includes(String(a.id))}
+                    onChange={e=>{
+                      if(e.target.checked){
+                        setAgencesSelectionnees([
+                          ...agencesSelectionnees,
+                          String(a.id)
+                        ]);
+                      }else{
+                        setAgencesSelectionnees(
+                          agencesSelectionnees.filter(x=>x!==String(a.id))
+                        );
+                      }
+                    }}
+                  />
+                  {a.nom}
+                </label>
+              </div>
+            )}
+          </div>
+        }
+
+        <button
+          onClick={comparer}
+          style={{marginTop:20}}
+        >
+          Comparer
+        </button>
+
+      </section>
+
+      {resultats.length > 0 &&
+        <section className="panel">
+
+          <h2>Résultats</h2>
+
+          <table width="100%">
+            <thead>
+              <tr>
+                <th>Agence</th>
+                <th>Période A</th>
+                <th>Période B</th>
+                <th>Variation DH</th>
+                <th>Variation %</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {resultats.map(r=>
+                <tr key={r.agence_id}>
+                  <td>{r.agence}</td>
+                  <td>{format(r.periode_a)}</td>
+                  <td>{format(r.periode_b)}</td>
+                  <td>{format(r.variation)}</td>
+                  <td>{r.variation_pct.toFixed(2)} %</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+
+        </section>
+      }
+
+    </>
+  );
 }
 
 function Parametres(){
