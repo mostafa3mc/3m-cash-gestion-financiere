@@ -333,6 +333,11 @@ function Comparaison(){
 
   const [resultats, setResultats] = React.useState([]);
 
+  const totalA = resultats.reduce((s,r)=>s + Number(r.periode_a || 0), 0);
+const totalB = resultats.reduce((s,r)=>s + Number(r.periode_b || 0), 0);
+const totalVariation = totalB - totalA;
+const totalVariationPct = totalA !== 0 ? (totalVariation / Math.abs(totalA)) * 100 : (totalB > 0 ? 100 : 0);
+
   const topProgression = resultats
   .filter(r => r.variation > 0)
   .slice(0, 5);
@@ -506,6 +511,15 @@ const topRegression = [...resultats]
 
       </section>
 
+{resultats.length > 0 &&
+  <section className="cards">
+    <Card title="Période A" value={format(totalA)} />
+    <Card title="Période B" value={format(totalB)} />
+    <Card title="Variation DH" value={format(totalVariation)} accent />
+    <Card title="Variation %" value={totalVariationPct.toFixed(2) + ' %'} />
+  </section>
+}
+      
       {resultats.length > 0 &&
         <section className="panel">
 
