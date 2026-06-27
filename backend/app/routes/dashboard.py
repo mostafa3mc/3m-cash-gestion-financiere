@@ -61,6 +61,7 @@ def comparaison(
     annee_b: int,
     mois_b: int,
     agence_ids: str | None = None,
+    produit_id: int | None = None,
     db: Session = Depends(get_db)
 ):
     agences_query = db.query(Agence).order_by(Agence.nom)
@@ -97,8 +98,26 @@ def comparaison(
             Charge.mois == mois_b
         ).scalar()
 
-        periode_a = float(rev_a - ch_a)
-        periode_b = float(rev_b - ch_b)
+        if produit_id:
+    rev_a = db.query(func.coalesce(func.sum(Revenu.montant_ttc), 0)).filter(
+        Revenu.agence_id == agence.id,
+        Revenu.annee == annee_a,
+        Revenu.mois == mois_a,
+        Revenu.produit_id == produit_id
+    ).scalar()
+
+    rev_b = db.query(func.coalesce(func.sum(Revenu.montant_ttc), 0)).filter(
+        Revenu.agence_id == agence.id,
+        Revenu.annee == annee_b,
+        Revenu.mois == mois_b,
+        Revenu.produit_id == produit_id
+    ).scalar()
+
+    periode_a = float(rev_a)
+    periode_b = float(rev_b)
+else:
+    periode_a = float(rev_a - ch_a)
+    periode_b = float(rev_b - ch_b)
         variation = periode_b - periode_a
 
         if periode_a != 0:
